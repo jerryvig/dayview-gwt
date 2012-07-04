@@ -35,6 +35,7 @@ public class DayviewApp implements EntryPoint {
     private static final double LEFT_BORDER_PCT = 0.13;
     private static final double TIME_DATE_FONT_PCT = 0.58;
     private static final double HIGHLIGHT_WIDTH = 15;
+    private static final double SCROLL_BLOCK_CELLSPACING = 8.0;
 
     private static DateTimeFormat dateFmt;
     private static DateTimeFormat timeFmt;
@@ -49,15 +50,16 @@ public class DayviewApp implements EntryPoint {
     private Label dateLabel = null;
     private FlowPanel scrollBlockPanel = null;
     private FlowPanel weatherPanel = null;
+    private FlowPanel trafficPanel = null;
     private Timer timeAndDateTimer = null;
     private ArrayList<Image> imgList = null;
 
+    private FlowPanel temperaturePanel = null;
     private FlexTable weatherInfoTable = null;
 
     private Logger lager = Logger.getLogger("DayviewLogger");
 
     public void onModuleLoad() {
-
         // Assume that the host HTML has elements defined whose
         // IDs are "slot1", "slot2".  In a real app, you probably would not want
         // to hard-code IDs.  Instead, you could, for example, search for all
@@ -92,15 +94,20 @@ public class DayviewApp implements EntryPoint {
         scrollBlockPanel.getElement().getStyle().setLeft(leftBorderPx, Style.Unit.PX);
         scrollBlockPanel.getElement().getStyle().setTop(topBorderPx+2.0*timeDateFontSize+15.0, Style.Unit.PX);
         scrollBlockPanel.getElement().getStyle().setWidth(scrollBlockDivWidth, Style.Unit.PX);
-        scrollBlockPanel.add( new Label("here is some text") );
 
         weatherPanel = new FlowPanel();
         weatherPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
         weatherPanel.getElement().getStyle().setLeft(0, Style.Unit.PX);
         weatherPanel.getElement().getStyle().setTop(HIGHLIGHT_WIDTH, Style.Unit.PX);
 
+        trafficPanel = new FlowPanel();
+        trafficPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        trafficPanel.getElement().getStyle().setTop(HIGHLIGHT_WIDTH, Style.Unit.PX);
+
+        trafficPanel.add( new Label("here in the traffic panel") );   // here you are.
 
         scrollBlockPanel.add( weatherPanel );
+        scrollBlockPanel.add( trafficPanel );
 
         RootPanel.get().getElement().getStyle().setTop(0, Style.Unit.PX);
         RootPanel.get().getElement().getStyle().setLeft(0, Style.Unit.PX);
@@ -144,6 +151,8 @@ public class DayviewApp implements EntryPoint {
 
         double weatherBarImgWidth = Math.floor(scrollBlockDivWidth*0.25);
         double weatherBarImgHeight = Math.floor((weatherBarImgWidth/weatherBarImg.getWidth())*weatherBarImg.getHeight());
+        trafficPanel.getElement().getStyle().setLeft(weatherBarImgWidth+SCROLL_BLOCK_CELLSPACING,Style.Unit.PX);
+
         weatherBarImg.setHeight(Double.toString(weatherBarImgHeight)+"px");
         weatherBarImg.setWidth(Double.toString(weatherBarImgWidth) + "px");
         weatherBarImg.setVisible(true);
@@ -160,9 +169,9 @@ public class DayviewApp implements EntryPoint {
         weatherInfoPanel.getElement().getStyle().setLeft(10, Style.Unit.PX);
         weatherInfoPanel.getElement().getStyle().setTop(0.1 * weatherBarImgHeight + weatherIconImgHeight, Style.Unit.PX);
         weatherInfoPanel.add( new HTML("Currently:<br/>") );
-        FlowPanel temperaturePanel = new FlowPanel();
+        temperaturePanel = new FlowPanel();
         temperaturePanel.getElement().getStyle().setFontSize(tempFontSize, Style.Unit.PX);
-        temperaturePanel.add( new Label("81 F") );
+
         weatherInfoTable = new FlexTable();
         weatherInfoTable.setCellPadding(3);
         weatherInfoTable.setCellSpacing(5);
@@ -222,23 +231,30 @@ public class DayviewApp implements EntryPoint {
     }
 
     public void printWeatherDetails() {
+        lager.log(Level.SEVERE, "in printWeatherDetails()");
         JsonpRequestBuilder jsonpBuilder = new JsonpRequestBuilder();
-        jsonpBuilder.requestObject("http://jerry-vm:8080/images", new AsyncCallback<WeatherData>() {
+        jsonpBuilder.requestObject("http://jerry-vm:8080/weather_details", new AsyncCallback<WeatherData>() {
             public void onFailure(Throwable caught) {
                 lager.log(Level.SEVERE, "Failure");
             }
 
             public void onSuccess(WeatherData result) {
-                weatherInfoTable.setText(0,0,"H: 79");
-                weatherInfoTable.setText(0,1,"L: 51");
-                weatherInfoTable.setText(1,0,"Precip: ");
-                weatherInfoTable.setText(1,1,"30%");
-                weatherInfoTable.setText(2,0,"Wind: ");
-                weatherInfoTable.setText(2,1,"NNW 30mph");
-                weatherInfoTable.setText(3,0,"Humidity: ");
-                weatherInfoTable.setText(3,1,"35%");
-                weatherInfoTable.setText(4,0,"UV Index: ");
-                weatherInfoTable.setText(4,1,"8.7");
+                if (result.getWeatherDetails() != null) {
+                    lager.log(Level.SEVERE, "weatherDetails not null");
+                    WeatherDetails wd = result.getWeatherDetails().get(0);
+
+                    temperaturePanel.add(new HTML(wd.getCurrentTemperature() + "&ordm;"));
+                    weatherInfoTable.setHTML(0, 0, "H: " + wd.getHigh() + "&ordm;");
+                    weatherInfoTable.setHTML(0, 1, "L: " + wd.getLow() + "&ordm;");
+                    weatherInfoTable.setText(1, 0, "Precip: ");
+                    weatherInfoTable.setText(1, 1, wd.getPreciptationChance());
+                    weatherInfoTable.setText(2, 0, "Wind: ");
+                    weatherInfoTable.setText(2, 1, wd.getWind());
+                    weatherInfoTable.setText(3, 0, "Humidity: ");
+                    weatherInfoTable.setText(3, 1, wd.getHumidity());
+                    weatherInfoTable.setText(4, 0, "UV Index: ");
+                    weatherInfoTable.setText(4, 1, wd.getUvIndex());
+                }
             }
         });
     }
@@ -322,6 +338,30 @@ public class DayviewApp implements EntryPoint {
 
         public final native String getCurrentTemperature() /*-{
              return this.currentTemperature;
+        }-*/;
+
+        public final native String getHigh() /*-{
+            return this.high;
+        }-*/;
+
+        public final native String getLow() /*-{
+            return this.low;
+        }-*/;
+
+        public final native String getPreciptationChance() /*-{
+            return this.precipitationChance;
+        }-*/;
+
+        public final native String getWind() /*-{
+            return this.wind;
+        }-*/;
+
+        public final native String getHumidity() /*-{
+            return this.humidity;
+        }-*/;
+
+        public final native String getUvIndex() /*-{
+            return this.uvIndex;
         }-*/;
     }
 
