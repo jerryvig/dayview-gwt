@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_dayview-gwt" default="compile.module.dayview-gwt">
+  <dirname property="module.dayview-gwt.basedir" file="${ant.file.module_dayview-gwt}"/>
+  
+  <property name="module.jdk.home.dayview-gwt" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.dayview-gwt" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.dayview-gwt" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.dayview-gwt" value="${compiler.args}"/>
+  
+  <property name="dayview-gwt.output.dir" value="${module.dayview-gwt.basedir}/out/production/dayview-gwt"/>
+  <property name="dayview-gwt.testoutput.dir" value="${module.dayview-gwt.basedir}/out/test/dayview-gwt"/>
+  
+  <path id="dayview-gwt.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="dayview-gwt.module.production.classpath">
+    <path refid="${module.jdk.classpath.dayview-gwt}"/>
+    <path refid="library.gwt-user.classpath"/>
+  </path>
+  
+  <path id="dayview-gwt.runtime.production.module.classpath">
+    <pathelement location="${dayview-gwt.output.dir}"/>
+    <path refid="library.gwt-user.classpath"/>
+  </path>
+  
+  <path id="dayview-gwt.module.classpath">
+    <path refid="${module.jdk.classpath.dayview-gwt}"/>
+    <pathelement location="${dayview-gwt.output.dir}"/>
+    <path refid="library.gwt-user.classpath"/>
+  </path>
+  
+  <path id="dayview-gwt.runtime.module.classpath">
+    <pathelement location="${dayview-gwt.testoutput.dir}"/>
+    <pathelement location="${dayview-gwt.output.dir}"/>
+    <path refid="library.gwt-user.classpath"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.dayview-gwt">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.dayview-gwt">
+    <patternset refid="excluded.from.module.dayview-gwt"/>
+  </patternset>
+  
+  <path id="dayview-gwt.module.sourcepath">
+    <dirset dir="${module.dayview-gwt.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.dayview-gwt" depends="compile.module.dayview-gwt.production,compile.module.dayview-gwt.tests" description="Compile module dayview-gwt"/>
+  
+  <target name="compile.module.dayview-gwt.production" depends="register.custom.compilers" description="Compile module dayview-gwt; production classes">
+    <mkdir dir="${dayview-gwt.output.dir}"/>
+    <javac2 destdir="${dayview-gwt.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.dayview-gwt}/javac">
+      <compilerarg line="${compiler.args.dayview-gwt}"/>
+      <bootclasspath refid="dayview-gwt.module.bootclasspath"/>
+      <classpath refid="dayview-gwt.module.production.classpath"/>
+      <src refid="dayview-gwt.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.dayview-gwt"/>
+    </javac2>
+    
+    <copy todir="${dayview-gwt.output.dir}">
+      <fileset dir="${module.dayview-gwt.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.dayview-gwt.tests" depends="register.custom.compilers,compile.module.dayview-gwt.production" description="compile module dayview-gwt; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.dayview-gwt" description="cleanup module">
+    <delete dir="${dayview-gwt.output.dir}"/>
+    <delete dir="${dayview-gwt.testoutput.dir}"/>
+  </target>
+  
+  <property name="gwt.compiler.output.dayview-gwt" value="${module.dayview-gwt.basedir}/GWTCompilerOutput_dayview-gwt"/>
+  
+  <!-- Run GWT compiler for GWT module ${gwt.module.name} -->
+  <target name="run.gwt.compiler.dayview-gwt" description="Run GWT compiler">
+    <java fork="true" jvm="${module.jdk.bin.dayview-gwt}/java" classname="com.google.gwt.dev.Compiler">
+      <jvmarg line="-Xmx128m"/>
+      <classpath>
+        <pathelement location="${gwt.sdk.home.dayview-gwt}/gwt-dev.jar"/>
+        <path refid="dayview-gwt.module.sourcepath"/>
+        <path refid="dayview-gwt.module.classpath"/>
+      </classpath>
+      <arg value="-logLevel"/>
+      <arg value="WARN"/>
+      <arg value="-war"/>
+      <arg value="${gwt.compiler.output.dayview-gwt}"/>
+      <arg value="-style"/>
+      <arg value="DETAILED"/>
+      <arg value="${gwt.module.name}"/>
+    </java>
+  </target>
+  
+  <target name="compile.gwt.dayview-gwt" depends="compile.module.dayview-gwt" description="Compile all GWT modules in module dayview-gwt">
+    <property name="gwt.sdk.home.dayview-gwt" value="${gwt.sdk.home}"/>
+    <antcall target="run.gwt.compiler.dayview-gwt">
+      <param name="gwt.module.name" value="com.DayviewApp.DayviewApp"/>
+    </antcall>
+  </target>
+</project>
