@@ -13,6 +13,7 @@ import com.google.gwt.user.client.DOM;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.event.shared.GwtEvent;
+import com.google.gwt.event.dom.client.KeyCodes;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
@@ -330,11 +331,22 @@ public class DayviewApp implements EntryPoint {
 
         scrollBlockPanel.getElement().getStyle().setZIndex(1000);
 
-        contentPanel.addDomHandler(new KeyDownHandler(){
+        RootPanel.get().addDomHandler(new KeyDownHandler(){
              public void onKeyDown(KeyDownEvent evt) {
-                  Window.alert("you pressed down on key");
+              if ( evt.getNativeKeyCode() ==  KeyCodes.KEY_RIGHT ) {
+                  Window.alert( "you pressed the RIGHT key" );
+              }
+              else if ( evt.getNativeKeyCode() == KeyCodes.KEY_LEFT ) {
+                  Window.alert( "you pressed the LEFT key" );
+              }
+              else if ( evt.getNativeKeyCode() == KeyCodes.KEY_ENTER ) {
+                  Window.alert( "you pressed the ENTER key" );
+              }
+              else if ( evt.getNativeKeyCode() == KeyCodes.KEY_ESCAPE ) {
+                  Window.alert( "you pressed the ESCAPE key" );
+              }
              }
-        },new DomEvent.Type<KeyDownHandler>("KeyDownEvent",));
+        },KeyDownEvent.getType());
 
         lager.log(Level.SEVERE, "you arrived here");
     }
