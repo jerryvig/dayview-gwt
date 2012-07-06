@@ -31,5 +31,19 @@ body, td, a, div, .p {
     font-family: 'Lucida Sans';
     font-weight: bold;
     font-size: 21px;
-    overflow: hidden;
+    overflow: visible;
+}
+
+.scrollBlockPanel {
+    overflow: visible;
+}
+
+.topHighlightDiv {
+    border-top-right-radius: 7px;
+    border-top-left-radius: 7px;
+}
+
+.bottomHighlightDiv  {
+    border-bottom-right-radius: 7px;
+    border-bottom-left-radius: 7px;
 }

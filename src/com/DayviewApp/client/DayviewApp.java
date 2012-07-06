@@ -11,6 +11,7 @@ import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.dom.client.Document;
+import com.google.gwt.user.client.Element;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
@@ -48,14 +49,23 @@ public class DayviewApp implements EntryPoint {
 
     private Label timeLabel = null;
     private Label dateLabel = null;
+
     private FlowPanel scrollBlockPanel = null;
     private FlowPanel weatherPanel = null;
     private FlowPanel trafficPanel = null;
+    private FlowPanel newsPanel = null;
+    private FlowPanel calendarPanel = null;
+
+    private FlowPanel topHighlightPanel = null;
+    private FlowPanel bottomHighlightPanel = null;
+
     private Timer timeAndDateTimer = null;
     private ArrayList<Image> imgList = null;
 
     private FlowPanel temperaturePanel = null;
     private FlexTable weatherInfoTable = null;
+    private FlowPanel newsTextPanel = null;
+    private FlowPanel calendarEventPanel = null;
 
     private Logger lager = Logger.getLogger("DayviewLogger");
 
@@ -70,6 +80,13 @@ public class DayviewApp implements EntryPoint {
 
         windowHeight = Window.getClientHeight();
         windowWidth = Window.getClientWidth();
+
+        Element videoElement = DOM.getElementById("mainVid");
+        videoElement.getStyle().setPosition(Style.Position.ABSOLUTE);
+        videoElement.getStyle().setTop(0,Style.Unit.PX);
+        videoElement.getStyle().setLeft(0,Style.Unit.PX);
+        videoElement.getStyle().setWidth(windowWidth,Style.Unit.PX);
+
         double topBorderPx = Math.floor(windowHeight*TOP_BORDER_PCT);
         double leftBorderPx = Math.floor(windowWidth*LEFT_BORDER_PCT);
         timeDateFontSize = Math.floor(topBorderPx*TIME_DATE_FONT_PCT);
@@ -90,9 +107,10 @@ public class DayviewApp implements EntryPoint {
         contentPanel.add( timeLabel );
 
         scrollBlockPanel = new FlowPanel();
-        scrollBlockPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
-        scrollBlockPanel.getElement().getStyle().setLeft(leftBorderPx, Style.Unit.PX);
-        scrollBlockPanel.getElement().getStyle().setTop(topBorderPx+2.0*timeDateFontSize+15.0, Style.Unit.PX);
+        scrollBlockPanel.getElement().getStyle().setOverflow(Style.Overflow.VISIBLE);
+        scrollBlockPanel.getElement().getStyle().setPosition(Style.Position.RELATIVE);
+        scrollBlockPanel.getElement().getStyle().setLeft(0, Style.Unit.PX);
+        scrollBlockPanel.getElement().getStyle().setTop(0, Style.Unit.PX);
         scrollBlockPanel.getElement().getStyle().setWidth(scrollBlockDivWidth, Style.Unit.PX);
 
         weatherPanel = new FlowPanel();
@@ -104,15 +122,29 @@ public class DayviewApp implements EntryPoint {
         trafficPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
         trafficPanel.getElement().getStyle().setTop(HIGHLIGHT_WIDTH, Style.Unit.PX);
 
-        trafficPanel.add( new Label("here in the traffic panel") );   // here you are.
+        newsPanel = new FlowPanel();
+        newsPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        newsPanel.getElement().getStyle().setTop(HIGHLIGHT_WIDTH,Style.Unit.PX);
+
+        calendarPanel = new FlowPanel();
+        calendarPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        calendarPanel.getElement().getStyle().setTop(HIGHLIGHT_WIDTH,Style.Unit.PX);
+
+        topHighlightPanel = new FlowPanel();
+        bottomHighlightPanel = new FlowPanel();
+        topHighlightPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        bottomHighlightPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
 
         scrollBlockPanel.add( weatherPanel );
         scrollBlockPanel.add( trafficPanel );
+        scrollBlockPanel.add( newsPanel );
+        scrollBlockPanel.add( calendarPanel );
+        scrollBlockPanel.add( topHighlightPanel );
+        scrollBlockPanel.add( bottomHighlightPanel );
 
-        RootPanel.get().getElement().getStyle().setTop(0, Style.Unit.PX);
-        RootPanel.get().getElement().getStyle().setLeft(0, Style.Unit.PX);
+        contentPanel.add( scrollBlockPanel );
         RootPanel.get().add(contentPanel);
-        RootPanel.get().add(scrollBlockPanel);
+       // RootPanel.get().add(scrollBlockPanel);
 
         printTimeAndDate();
         timeAndDateTimer = new Timer() {
@@ -124,33 +156,62 @@ public class DayviewApp implements EntryPoint {
         timeAndDateTimer.schedule(2500);
 
         loadImages();
-
     }
 
     public void imagesLoaded() {
         lager.log(Level.SEVERE, "in imagesLoaded()");
         Image weatherBarImg = null;
         Image weatherIconImg = null;
+        Image trafficMapImg = null;
+        Image trafficBarImg = null;
+        Image newsPhotoImg = null;
+        Image newsBarImg = null;
+        Image calendarPanelImg = null;
+        Image calendarIconImg = null;
 
         for ( Iterator<Widget> iter=RootPanel.get().iterator(); iter.hasNext(); ) {
             Widget nextWidget = iter.next();
             if ( nextWidget.getElement().getId().length() > 0 ) {
                 lager.log(Level.SEVERE, nextWidget.getElement().getId());
                 if ( nextWidget.getElement().getId().equals("weatherBarImg") ) {
-                    weatherBarImg = (Image) nextWidget;
-
+                    weatherBarImg = (Image)nextWidget;
                 }
                 else if ( nextWidget.getElement().getId().equals("weatherIconImg") ) {
-                    weatherIconImg = (Image) nextWidget;
+                    weatherIconImg = (Image)nextWidget;
+                }
+                else if ( nextWidget.getElement().getId().equals("trafficBottomBarImg") ) {
+                    trafficBarImg = (Image)nextWidget;
+                }
+                else if ( nextWidget.getElement().getId().equals("trafficMapImg") ) {
+                    trafficMapImg = (Image)nextWidget;
+                }
+                else if ( nextWidget.getElement().getId().equals("newPhotoImg") ) {
+                    newsPhotoImg = (Image)nextWidget;
+                }
+                else if ( nextWidget.getElement().getId().equals("newsBottomBarImg") ) {
+                    newsBarImg = (Image)nextWidget;
+                }
+                else if ( nextWidget.getElement().getId().equals("calendarPanelImg") ) {
+                    calendarPanelImg = (Image)nextWidget;
+                }
+                else if ( nextWidget.getElement().getId().equals("calendarIconImg") ) {
+                    calendarIconImg = (Image)nextWidget;
                 }
             }
         }
 
         weatherPanel.add( weatherBarImg );
         weatherPanel.add( weatherIconImg );
+        trafficPanel.add( trafficMapImg );
+        trafficPanel.add( trafficBarImg );
+        newsPanel.add( newsPhotoImg );
+        newsPanel.add( newsBarImg );
+        calendarPanel.add( calendarPanelImg );
+        calendarPanel.add( calendarIconImg );
 
         double weatherBarImgWidth = Math.floor(scrollBlockDivWidth*0.25);
         double weatherBarImgHeight = Math.floor((weatherBarImgWidth/weatherBarImg.getWidth())*weatherBarImg.getHeight());
+
         trafficPanel.getElement().getStyle().setLeft(weatherBarImgWidth+SCROLL_BLOCK_CELLSPACING,Style.Unit.PX);
 
         weatherBarImg.setHeight(Double.toString(weatherBarImgHeight)+"px");
@@ -182,8 +243,92 @@ public class DayviewApp implements EntryPoint {
         weatherInfoPanel.add( temperaturePanel );
         weatherInfoPanel.add( weatherInfoTable );
 
-
         weatherPanel.add( weatherInfoPanel );
+
+        trafficMapImg.setVisible(true);
+        trafficBarImg.setVisible(true);
+
+        double trafficScaleFactor = (weatherBarImgHeight/(trafficMapImg.getHeight()+trafficBarImg.getHeight()));
+        trafficMapImg.setHeight(Double.toString(Math.floor(trafficScaleFactor*trafficMapImg.getHeight()))+"px");
+        trafficMapImg.setWidth(Double.toString(Math.floor(trafficScaleFactor*trafficMapImg.getWidth()))+"px");
+        trafficBarImg.setHeight(Double.toString(Math.floor(trafficScaleFactor*trafficBarImg.getHeight()))+"px");
+        trafficBarImg.setWidth(Double.toString(Math.floor(trafficScaleFactor*trafficBarImg.getWidth()))+"px");
+
+        trafficMapImg.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        trafficBarImg.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        trafficMapImg.getElement().getStyle().setTop(0,Style.Unit.PX);
+        trafficMapImg.getElement().getStyle().setLeft(0,Style.Unit.PX);
+        trafficBarImg.getElement().getStyle().setLeft(0,Style.Unit.PX);
+        trafficBarImg.getElement().getStyle().setTop(Math.floor(trafficMapImg.getHeight() * trafficScaleFactor),Style.Unit.PX);
+
+        lager.log(Level.SEVERE, "starting newspanel routine");
+
+        newsPhotoImg.setVisible(true);
+        newsBarImg.setVisible(true);
+        double newsScaleFactor = (weatherBarImgHeight/(newsPhotoImg.getHeight()+newsBarImg.getHeight()));
+        newsPhotoImg.setHeight(Double.toString(Math.floor(newsScaleFactor*newsPhotoImg.getHeight()))+"px");
+        newsPhotoImg.setWidth(Double.toString(Math.floor(newsScaleFactor * newsPhotoImg.getWidth())) + "px");
+        newsBarImg.setHeight(Double.toString(Math.floor(newsScaleFactor * newsBarImg.getHeight())) + "px");
+        newsBarImg.setWidth(Double.toString(Math.floor(newsScaleFactor * newsBarImg.getWidth())) + "px");
+        newsPhotoImg.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        newsBarImg.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        newsPhotoImg.getElement().getStyle().setLeft(0, Style.Unit.PX);
+        newsPhotoImg.getElement().getStyle().setTop(0,Style.Unit.PX);
+        newsBarImg.getElement().getStyle().setLeft(0,Style.Unit.PX);
+        newsBarImg.getElement().getStyle().setTop(Math.floor(newsPhotoImg.getHeight()*newsScaleFactor),Style.Unit.PX);
+
+        newsPanel.getElement().getStyle().setLeft(Math.floor(weatherBarImgWidth+trafficMapImg.getWidth()+2.0*SCROLL_BLOCK_CELLSPACING),Style.Unit.PX);
+        newsTextPanel = new FlowPanel();
+        newsTextPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        newsTextPanel.getElement().getStyle().setLeft(20, Style.Unit.PX);
+        newsTextPanel.setWidth(Double.toString(newsPhotoImg.getWidth()-20)+"px");
+        newsTextPanel.getElement().getStyle().setTop(Math.floor(newsPhotoImg.getHeight()+60),Style.Unit.PX);
+        newsTextPanel.setStyleName("weatherInfoPanel");
+
+        newsPanel.add( newsTextPanel );
+
+        printNewsItems();
+
+        calendarPanelImg.setVisible(true);
+        calendarIconImg.setVisible(true);
+        double calendarScaleFactor = (weatherBarImgHeight/calendarPanelImg.getHeight());
+        calendarPanelImg.setHeight(Double.toString(Math.floor((calendarScaleFactor * calendarPanelImg.getHeight()))) + "px");
+        calendarPanelImg.setWidth(Double.toString(Math.floor((calendarScaleFactor * calendarPanelImg.getWidth()))) + "px");
+        calendarPanelImg.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        calendarPanelImg.getElement().getStyle().setLeft(0, Style.Unit.PX);
+        calendarPanelImg.getElement().getStyle().setTop(0, Style.Unit.PX);
+        calendarIconImg.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        calendarIconImg.getElement().getStyle().setLeft(0,Style.Unit.PX);
+        calendarIconImg.getElement().getStyle().setTop(0,Style.Unit.PX);
+        calendarIconImg.setWidth(Double.toString(Math.floor(0.18*calendarPanelImg.getHeight()*calendarScaleFactor))+"px");
+
+        calendarPanel.getElement().getStyle().setLeft(Math.floor(weatherBarImgWidth+trafficMapImg.getWidth()+newsPhotoImg.getWidth()+3.0*SCROLL_BLOCK_CELLSPACING),Style.Unit.PX);
+        calendarEventPanel = new FlowPanel();
+        calendarEventPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
+        calendarEventPanel.getElement().getStyle().setLeft(20, Style.Unit.PX);
+        calendarEventPanel.getElement().getStyle().setTop(115,Style.Unit.PX);
+        calendarEventPanel.setWidth(Double.toString(calendarPanelImg.getWidth()-20)+"px");
+        calendarPanel.setStyleName("weatherInfoPanel");
+
+        calendarPanel.add( calendarEventPanel );
+
+        printCalendarEvents();
+
+        topHighlightPanel.setWidth(Double.toString(weatherBarImgWidth)+"px");
+        topHighlightPanel.setHeight(Double.toString(HIGHLIGHT_WIDTH) + "px");
+        topHighlightPanel.getElement().getStyle().setBackgroundColor("#FFEF00");
+        topHighlightPanel.getElement().getStyle().setTop(0, Style.Unit.PX);
+        topHighlightPanel.getElement().getStyle().setLeft(0,Style.Unit.PX);
+        bottomHighlightPanel.setWidth(Double.toString(weatherBarImgWidth)+"px");
+        bottomHighlightPanel.setHeight(Double.toString(HIGHLIGHT_WIDTH)+"px");
+        bottomHighlightPanel.getElement().getStyle().setTop(weatherBarImgHeight+HIGHLIGHT_WIDTH,Style.Unit.PX);
+        bottomHighlightPanel.getElement().getStyle().setLeft(0,Style.Unit.PX);
+        bottomHighlightPanel.getElement().getStyle().setBackgroundColor("#FFEF00");
+        topHighlightPanel.setStyleName("topHighlightDiv");
+        bottomHighlightPanel.setStyleName("bottomHighlightDiv");
+
+        scrollBlockPanel.getElement().getStyle().setZIndex(1000);
+
 
         lager.log(Level.SEVERE, "you arrived here");
     }
@@ -254,6 +399,49 @@ public class DayviewApp implements EntryPoint {
                     weatherInfoTable.setText(3, 1, wd.getHumidity());
                     weatherInfoTable.setText(4, 0, "UV Index: ");
                     weatherInfoTable.setText(4, 1, wd.getUvIndex());
+                }
+            }
+        });
+    }
+
+    public void printNewsItems() {
+        lager.log(Level.SEVERE, "In printNewsItems()");
+
+        JsonpRequestBuilder jsonpBuilder = new JsonpRequestBuilder();
+        jsonpBuilder.requestObject("http://jerry-vm:8080/news_items", new AsyncCallback<NewsItems>() {
+            public void onFailure(Throwable caught) {
+                lager.log(Level.SEVERE, "Failure");
+            }
+
+            public void onSuccess(NewsItems result) {
+                if (result.getNewsItems() != null) {
+                    lager.log(Level.SEVERE, "news_items not null");
+
+                    for ( int i=0; i<result.getNewsItems().length(); i++ ) {
+                        NewsItem ni = result.getNewsItems().get(i);
+                        newsTextPanel.add( new HTML("<li>"+ni.getHeadline()+"</li>"));
+                    }
+                }
+            }
+        });
+    }
+
+    public void printCalendarEvents() {
+        lager.log(Level.SEVERE, "In printCalendarEvents()");
+
+        JsonpRequestBuilder jsonpBuilder = new JsonpRequestBuilder();
+        jsonpBuilder.requestObject("http://jerry-vm:8080/calendar_events", new AsyncCallback<CalendarEvents>() {
+            public void onFailure(Throwable caught) {
+                lager.log(Level.SEVERE, "Failure");
+            }
+
+            public void onSuccess(CalendarEvents result) {
+                if (result.getCalendarEvents() != null) {
+                    for ( int i=0; i<result.getCalendarEvents().length(); i++ ) {
+                        CalendarEvent ce = result.getCalendarEvents().get(i);
+                        calendarEventPanel.add( new HTML(ce.getTimeSlot()+"<br/>"+ce.getTitle()));
+                        calendarEventPanel.add( new HTML("<br/>") );
+                    }
                 }
             }
         });
@@ -362,6 +550,42 @@ public class DayviewApp implements EntryPoint {
 
         public final native String getUvIndex() /*-{
             return this.uvIndex;
+        }-*/;
+    }
+
+    private static class NewsItems extends JavaScriptObject {
+        protected NewsItems() {}
+
+        public final native JsArray<NewsItem> getNewsItems() /*-{
+            return this.newsItems;
+        }-*/;
+    }
+
+    private static class NewsItem extends JavaScriptObject {
+        protected NewsItem() {}
+
+        public final native String getHeadline() /*-{
+            return this.headline;
+        }-*/;
+    }
+
+    private static class CalendarEvents extends JavaScriptObject {
+        protected CalendarEvents() {}
+
+        public final native JsArray<CalendarEvent> getCalendarEvents() /*-{
+            return this.calendarEvents;
+        }-*/;
+    }
+
+    private static class CalendarEvent extends JavaScriptObject {
+        protected CalendarEvent() {}
+
+        public final native String getTitle() /*-{
+            return this.title;
+        }-*/;
+
+        public final native String getTimeSlot() /*-{
+            return this.time_slot;
         }-*/;
     }
 

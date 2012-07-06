@@ -85,7 +85,7 @@
   <!-- Run GWT compiler for GWT module ${gwt.module.name} -->
   <target name="run.gwt.compiler.dayview-gwt" description="Run GWT compiler">
     <java fork="true" jvm="${module.jdk.bin.dayview-gwt}/java" classname="com.google.gwt.dev.Compiler">
-      <jvmarg line="-Xmx1024m"/>
+      <jvmarg line="-Xmx128m"/>
       <classpath>
         <pathelement location="${gwt.sdk.home.dayview-gwt}/gwt-dev.jar"/>
         <path refid="dayview-gwt.module.sourcepath"/>
@@ -96,7 +96,7 @@
       <arg value="-war"/>
       <arg value="${gwt.compiler.output.dayview-gwt}"/>
       <arg value="-style"/>
-      <arg value="OBF"/>
+      <arg value="DETAILED"/>
       <arg value="${gwt.module.name}"/>
     </java>
   </target>
