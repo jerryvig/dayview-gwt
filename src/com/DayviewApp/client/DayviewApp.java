@@ -12,6 +12,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.Element;
+import com.google.gwt.event.shared.GwtEvent;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
@@ -50,6 +51,7 @@ public class DayviewApp implements EntryPoint {
     private Label timeLabel = null;
     private Label dateLabel = null;
 
+    private FlowPanel contentPanel = null;
     private FlowPanel scrollBlockPanel = null;
     private FlowPanel weatherPanel = null;
     private FlowPanel trafficPanel = null;
@@ -83,7 +85,7 @@ public class DayviewApp implements EntryPoint {
 
         Element videoElement = DOM.getElementById("mainVid");
         videoElement.getStyle().setPosition(Style.Position.ABSOLUTE);
-        videoElement.getStyle().setTop(0,Style.Unit.PX);
+        videoElement.getStyle().setTop(0, Style.Unit.PX);
         videoElement.getStyle().setLeft(0,Style.Unit.PX);
         videoElement.getStyle().setWidth(windowWidth,Style.Unit.PX);
 
@@ -93,7 +95,7 @@ public class DayviewApp implements EntryPoint {
         tempFontSize = timeDateFontSize;
         scrollBlockDivWidth = Math.floor(windowWidth*(1-2.0*LEFT_BORDER_PCT));
 
-        FlowPanel contentPanel = new FlowPanel();
+        contentPanel = new FlowPanel();
         contentPanel.getElement().getStyle().setTop(topBorderPx, Style.Unit.PX);
         contentPanel.getElement().getStyle().setLeft(leftBorderPx, Style.Unit.PX);
         contentPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
@@ -144,7 +146,6 @@ public class DayviewApp implements EntryPoint {
 
         contentPanel.add( scrollBlockPanel );
         RootPanel.get().add(contentPanel);
-       // RootPanel.get().add(scrollBlockPanel);
 
         printTimeAndDate();
         timeAndDateTimer = new Timer() {
@@ -306,8 +307,8 @@ public class DayviewApp implements EntryPoint {
         calendarEventPanel = new FlowPanel();
         calendarEventPanel.getElement().getStyle().setPosition(Style.Position.ABSOLUTE);
         calendarEventPanel.getElement().getStyle().setLeft(20, Style.Unit.PX);
-        calendarEventPanel.getElement().getStyle().setTop(115,Style.Unit.PX);
-        calendarEventPanel.setWidth(Double.toString(calendarPanelImg.getWidth()-20)+"px");
+        calendarEventPanel.getElement().getStyle().setTop(115, Style.Unit.PX);
+        calendarEventPanel.setWidth(Double.toString(calendarPanelImg.getWidth() - 20) + "px");
         calendarPanel.setStyleName("weatherInfoPanel");
 
         calendarPanel.add( calendarEventPanel );
@@ -329,6 +330,11 @@ public class DayviewApp implements EntryPoint {
 
         scrollBlockPanel.getElement().getStyle().setZIndex(1000);
 
+        contentPanel.addDomHandler(new KeyDownHandler(){
+             public void onKeyDown(KeyDownEvent evt) {
+                  Window.alert("you pressed down on key");
+             }
+        },new DomEvent.Type<KeyDownHandler>("KeyDownEvent",));
 
         lager.log(Level.SEVERE, "you arrived here");
     }
@@ -439,7 +445,7 @@ public class DayviewApp implements EntryPoint {
                 if (result.getCalendarEvents() != null) {
                     for ( int i=0; i<result.getCalendarEvents().length(); i++ ) {
                         CalendarEvent ce = result.getCalendarEvents().get(i);
-                        calendarEventPanel.add( new HTML(ce.getTimeSlot()+"<br/>"+ce.getTitle()));
+                        calendarEventPanel.add(new HTML(ce.getTimeSlot() + "<br/>" + ce.getTitle()));
                         calendarEventPanel.add( new HTML("<br/>") );
                     }
                 }
