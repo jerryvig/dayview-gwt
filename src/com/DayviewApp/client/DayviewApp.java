@@ -14,6 +14,7 @@ import com.google.gwt.dom.client.Document;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.animation.client.Animation;
 
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Timer;
@@ -654,14 +655,47 @@ public class DayviewApp implements EntryPoint {
             lager.log(Level.SEVERE, "in updateHighlightPanels()");
             double highlightLeft = Double.parseDouble( focusPanel.getElement().getStyle().getLeft().replace("px","") );
 
-            topHighlightPanel.getElement().getStyle().setWidth( widgetWidth, Style.Unit.PX );
-            bottomHighlightPanel.getElement().getStyle().setWidth( widgetWidth, Style.Unit.PX );
-            topHighlightPanel.getElement().getStyle().setLeft( highlightLeft, Style.Unit.PX );
-            bottomHighlightPanel.getElement().getStyle().setLeft( highlightLeft, Style.Unit.PX );
+            BarAnimation topAnim = new BarAnimation( topHighlightPanel.getElement(),
+                                                     Double.parseDouble(topHighlightPanel.getElement().getStyle().getWidth().replace("px","")),
+                                                     widgetWidth,
+                                                     Double.parseDouble(topHighlightPanel.getElement().getStyle().getLeft().replace("px","")),
+                                                     highlightLeft );
+            BarAnimation bottomAnim = new BarAnimation( bottomHighlightPanel.getElement(),
+                                                        Double.parseDouble(bottomHighlightPanel.getElement().getStyle().getWidth().replace("px","")),
+                                                        widgetWidth,
+                                                        Double.parseDouble(bottomHighlightPanel.getElement().getStyle().getLeft().replace("px","")),
+                                                        highlightLeft );
+
+            topAnim.run(600);
+            bottomAnim.run(600);
         }
 
         public void updateModuleDivPositions() {
 
         }
+    }
+
+    private class BarAnimation extends Animation {
+         private final Element e;
+         private double widthStart;
+         private double widthStop;
+         private double leftStart;
+         private double leftStop;
+
+         public BarAnimation( Element _e, double _widthStart, double _widthStop, double _leftStart, double _leftStop ) {
+             e = _e;
+             widthStart = _widthStart;
+             widthStop = _widthStop;
+             leftStart = _leftStart;
+             leftStop = _leftStop;
+         }
+
+         @Override
+         protected void onUpdate(double prog) {
+             double width = widthStart+(widthStop-widthStart)*prog;
+             double left = leftStart+(leftStop-leftStart)*prog;
+             e.getStyle().setWidth(width, Style.Unit.PX);
+             e.getStyle().setLeft(left,Style.Unit.PX);
+         }
     }
 }
