@@ -631,25 +631,33 @@ public class DayviewApp implements EntryPoint {
         }
 
         public void processFocusIndex() {
-            lager.log(Level.SEVERE, "in processFocusIndex()");
+            lager.log(Level.SEVERE, "in processFocusIndex(), moduleFocusIndex = " + moduleFocusIndex );
 
             focusPanel = focusPanels.get( moduleFocusIndex );
             int widgetCount = focusPanel.getWidgetCount();
             double maxWidth = 0.0;
+
             for ( int i=0; i<widgetCount; i++ ) {
-                if ( focusPanel.getWidget(i).getElement().getStyle().getWidth() != "" ) {
+               if ( focusPanel.getWidget(i).getElement().getStyle().getWidth() != null ) {
+                if ( !focusPanel.getWidget(i).getElement().getStyle().getWidth().equals("") ) {
                    String widgetWidthString = focusPanel.getWidget(i).getElement().getStyle().getWidth();
                    double widgetWidth = Double.parseDouble( widgetWidthString.replace("px","") );
                    if ( widgetWidth > maxWidth ) maxWidth = widgetWidth;
                 }
+               }
             }
 
-
-
+            updateHighlightPanels( maxWidth );
         }
 
-        public void updateHighlightDivPositions() {
+        public void updateHighlightPanels( double widgetWidth ) {
+            lager.log(Level.SEVERE, "in updateHighlightPanels()");
+            double highlightLeft = Double.parseDouble( focusPanel.getElement().getStyle().getLeft().replace("px","") );
 
+            topHighlightPanel.getElement().getStyle().setWidth( widgetWidth, Style.Unit.PX );
+            bottomHighlightPanel.getElement().getStyle().setWidth( widgetWidth, Style.Unit.PX );
+            topHighlightPanel.getElement().getStyle().setLeft( highlightLeft, Style.Unit.PX );
+            bottomHighlightPanel.getElement().getStyle().setLeft( highlightLeft, Style.Unit.PX );
         }
 
         public void updateModuleDivPositions() {
