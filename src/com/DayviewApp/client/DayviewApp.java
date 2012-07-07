@@ -70,6 +70,11 @@ public class DayviewApp implements EntryPoint {
     private FlowPanel newsTextPanel = null;
     private FlowPanel calendarEventPanel = null;
 
+    private boolean moduleMaximized = false;
+    private int moduleFocusIndex = 0;
+    private FlowPanel focusPanel = null;
+    private ArrayList<FlowPanel> focusPanels = new ArrayList();
+
     private Logger lager = Logger.getLogger("DayviewLogger");
 
     public void onModuleLoad() {
@@ -156,6 +161,11 @@ public class DayviewApp implements EntryPoint {
             }
         };
         timeAndDateTimer.schedule(2500);
+
+        focusPanels.add( weatherPanel );
+        focusPanels.add( trafficPanel );
+        focusPanels.add( newsPanel );
+        focusPanels.add( calendarPanel );
 
         loadImages();
     }
@@ -331,22 +341,7 @@ public class DayviewApp implements EntryPoint {
 
         scrollBlockPanel.getElement().getStyle().setZIndex(1000);
 
-        RootPanel.get().addDomHandler(new KeyDownHandler(){
-             public void onKeyDown(KeyDownEvent evt) {
-              if ( evt.getNativeKeyCode() ==  KeyCodes.KEY_RIGHT ) {
-                  Window.alert( "you pressed the RIGHT key" );
-              }
-              else if ( evt.getNativeKeyCode() == KeyCodes.KEY_LEFT ) {
-                  Window.alert( "you pressed the LEFT key" );
-              }
-              else if ( evt.getNativeKeyCode() == KeyCodes.KEY_ENTER ) {
-                  Window.alert( "you pressed the ENTER key" );
-              }
-              else if ( evt.getNativeKeyCode() == KeyCodes.KEY_ESCAPE ) {
-                  Window.alert( "you pressed the ESCAPE key" );
-              }
-             }
-        },KeyDownEvent.getType());
+        RootPanel.get().addDomHandler(new DayviewKeyDownHandler(),KeyDownEvent.getType());
 
         lager.log(Level.SEVERE, "you arrived here");
     }
@@ -607,4 +602,58 @@ public class DayviewApp implements EntryPoint {
         }-*/;
     }
 
+    private class DayviewKeyDownHandler implements KeyDownHandler {
+        public DayviewKeyDownHandler() {}
+
+        public void onKeyDown(KeyDownEvent evt) {
+            if ( evt.getNativeKeyCode() ==  KeyCodes.KEY_RIGHT ) {
+                if ( !moduleMaximized ) {
+                    if ( moduleFocusIndex < 3 ) {
+                       moduleFocusIndex++;
+                       processFocusIndex();
+                    }
+                }
+            }
+            else if ( evt.getNativeKeyCode() == KeyCodes.KEY_LEFT ) {
+                if ( !moduleMaximized ) {
+                  if ( moduleFocusIndex > 0 ) {
+                     moduleFocusIndex--;
+                     processFocusIndex();
+                  }
+                }
+            }
+            else if ( evt.getNativeKeyCode() == KeyCodes.KEY_ENTER ) {
+                Window.alert( "you pressed the ENTER key" );
+            }
+            else if ( evt.getNativeKeyCode() == KeyCodes.KEY_ESCAPE ) {
+                Window.alert( "you pressed the ESCAPE key" );
+            }
+        }
+
+        public void processFocusIndex() {
+            lager.log(Level.SEVERE, "in processFocusIndex()");
+
+            focusPanel = focusPanels.get( moduleFocusIndex );
+            int widgetCount = focusPanel.getWidgetCount();
+            double maxWidth = 0.0;
+            for ( int i=0; i<widgetCount; i++ ) {
+                if ( focusPanel.getWidget(i).getElement().getStyle().getWidth() != "" ) {
+                   String widgetWidthString = focusPanel.getWidget(i).getElement().getStyle().getWidth();
+                   double widgetWidth = Double.parseDouble( widgetWidthString.replace("px","") );
+                   if ( widgetWidth > maxWidth ) maxWidth = widgetWidth;
+                }
+            }
+
+
+
+        }
+
+        public void updateHighlightDivPositions() {
+
+        }
+
+        public void updateModuleDivPositions() {
+
+        }
+    }
 }
